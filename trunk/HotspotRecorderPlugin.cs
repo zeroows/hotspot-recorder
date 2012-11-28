@@ -109,7 +109,7 @@ namespace HotspotRecorder
                     }
                     mylocation = new XYZ(StyxWoW.Me.Location);
                 }
-            }       
+            }
         }
 
         public class XYZ
@@ -117,6 +117,7 @@ namespace HotspotRecorder
             public double X;
             public double Y;
             public double Z;
+            public bool navigable = true;
             public XYZ(double x, double y, double z)
             {
                 this.X = x; this.Y = y; this.Z = z;
@@ -124,6 +125,10 @@ namespace HotspotRecorder
             public XYZ(WoWPoint point)
             {
                 this.X = point.X; this.Y = point.Y; this.Z = point.Z;
+            }
+            public override string ToString() 
+            {
+                return string.Format("{0}, {1}, {2}", this.X, this.Y, this.Z);
             }
         }
     }

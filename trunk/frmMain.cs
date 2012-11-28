@@ -31,6 +31,7 @@ namespace HotspotRecorder
         private int closesthotspot = -1;
         private List<HotspotRecorderPlugin.XYZ> points = null;
         private HotspotRecorderPlugin fakeplugin = null;
+        private List<HotspotRecorderPlugin.XYZ> checkedpoints = null;
         private string header = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <HBProfile>
   <Name>{0}</Name>
@@ -98,6 +99,12 @@ namespace HotspotRecorder
             string s = string.Format(@"<{0} X=""{1:0.0000}"" Y=""{2:0.0000}"" Z=""{3:0.0000}"" {4} />", spottype, spot.X, spot.Y, spot.Z, suffix);
             return s;
         }
+
+        private WoWPoint PointToWoWPoint(HotspotRecorderPlugin.XYZ spot)
+        {
+            return new WoWPoint(spot.X, spot.Y, spot.Z);
+        }
+
         private string PointToVendorString(string vendorname, int entry, string vendortype, HotspotRecorderPlugin.XYZ spot)
         {
             string s = string.Format(@"<Vendor Name=""{0}"" Entry=""{1}"" Type=""{2}"" X=""{3:0.0000}"" Y=""{4:0.0000}"" Z=""{5:0.0000}"" />", vendorname, entry, vendortype, spot.X, spot.Y, spot.Z);
@@ -127,7 +134,6 @@ namespace HotspotRecorder
                 MessageBox.Show(errmsg, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
                 return null;
             }
-
         }
         private void AutoGenerateHotspot()
         {
@@ -219,6 +225,39 @@ namespace HotspotRecorder
             }
             return lb;
         }
+
+        private void UpdateCheckedPoints()
+        {
+            // Variable 'checkedpoints' is not null, that means On_Update is done with the check.
+            // Update the current list with those points.
+            List<HotspotRecorderPlugin.XYZ> localpoints = checkedpoints;
+            checkedpoints = null;
+            ListBox lb = theSelectedTab();
+            List<string> lst = new List<string>();
+            if (lb == null) return;
+            for (int i = 0; i < localpoints.Count; i++)
+            {
+                string s = "";
+                if (lb == this.lstNPC)
+                    s = PointToVendorString(this.targetname, this.targetentry, (this.isrepair ? "Repair" : "Food"), localpoints[i]);
+                else if (lb == this.lstMailboxes)
+                    s = PointToString("Mailbox", localpoints[i]);
+                else if (lb == this.lstBlackspots)
+                    s = PointToString("Blackspot", localpoints[i]);
+                else if (lb == this.lstHotSpots)
+                    s = PointToString("Hotspot", localpoints[i]);
+                string s2;
+                if (localpoints[i].navigable)
+                    s2 = s;
+                else
+                    s2 = string.Format("<!-- BAD POINT {0} -->", s);
+                lst.Add(s2);
+            }
+            lb.Items.Clear();
+            lb.Items.AddRange(lst.ToArray());
+            ClearPoints();
+        }
+
         #endregion
 
         #region Routine called by Honorbuddy Pulse method
@@ -233,17 +272,18 @@ namespace HotspotRecorder
             CalculateClosestHotspot();
             // Do a thread-safe update on the fields 
             // (this routine (On_Update) is called by an external thread.)
-            this.lblLocationNPC.Invoke((MethodInvoker)(() => lblLocationNPC.Text = (targetlocation == null ? "<no target>" : string.Format(fmt, targetlocation.X, targetlocation.Y, targetlocation.Z))));
-            this.lblLocationMe.Invoke((MethodInvoker)(() => lblLocationMe.Text = (mylocation == null ? "<null>" : string.Format(fmt, mylocation.X, mylocation.Y, mylocation.Z))));
-            this.lblNPCName.Invoke((MethodInvoker)(() => lblNPCName.Text = (targetname == null ? "<no target>" : targetname)));
+            this.lblLocationNPC.Invoke((MethodInvoker)(() => lblLocationNPC.Text = (targetlocation == null ? "<target name>" : string.Format(fmt, targetlocation.X, targetlocation.Y, targetlocation.Z))));
+            this.lblLocationMe.Invoke((MethodInvoker)(() => lblLocationMe.Text = (mylocation == null ? "<my location>" : string.Format(fmt, mylocation.X, mylocation.Y, mylocation.Z))));
+            this.lblNPCName.Invoke((MethodInvoker)(() => lblNPCName.Text = (targetname == null ? "<target location>" : targetname)));
 
             if (queue.Count > 0)
             {
                 int commandcnt = queue.Count;
+                Cursor.Current = Cursors.WaitCursor;
                 for (int i = 0; i < commandcnt; i++)
                 {
                     KeyValuePair<string, object> kvp = queue.Dequeue();
-                    display("Executing queued command {0} of {1}", i+1, commandcnt);
+                    display("Executing queued command {0} of {1}", i + 1, commandcnt);
                     switch (kvp.Key)
                     {
                         case "goto":
@@ -261,12 +301,45 @@ namespace HotspotRecorder
                                 ctr++;
                             }
                             break;
+                        case "CheckHotspots":
+                            List<HotspotRecorderPlugin.XYZ> list = (List<HotspotRecorderPlugin.XYZ>)kvp.Value;
+                            for (int j = 0; j < list.Count; j++)
+                                list[j].navigable = true;
+                            this.Invoke((MethodInvoker)(() => toolStripProgressBar1.Maximum = list.Count));
+                            int badpts = 0;
+                            for (int j = 1; j < list.Count; j++)
+                            {
+                                this.Invoke((MethodInvoker)(() => toolStripProgressBar1.Value = j));
+                                if (StyxWoW.Me == null)
+                                {
+                                    // Do a fake check here.
+                                    if (j % 10 == 0)
+                                    {
+                                        list[j].navigable = false;
+                                        badpts++;
+                                    }
+                                }
+                                else
+                                {
+                                    // Do a real check here.
+                                    if (!Styx.Pathing.Navigator.CanNavigateFully(PointToWoWPoint(list[j-1]), PointToWoWPoint(list[j])))
+                                    {
+                                        list[j].navigable = false;
+                                        badpts++;
+                                    }
+                                }
+                            }
+                            display("Done checking hotspots, {0} bad points found out of a total of {1}.", badpts, list.Count);
+                            checkedpoints = list;
+                            this.Invoke((MethodInvoker)(() => toolStripProgressBar1.Value = list.Count));
+                            break;
                         default:
                             display("Unknown command {0}!", kvp.Key);
                             break;
                     }
-                    display("Done executing queued command {0} of {1}", i+1, commandcnt);
+                    display("Done executing queued command {0} of {1}", i + 1, commandcnt);
                 }
+                Cursor.Current = Cursors.Default;
             }
         }
         #endregion
@@ -293,6 +366,8 @@ namespace HotspotRecorder
             lstMailboxes.HorizontalScrollbar = true;
             lstNPC.HorizontalScrollbar = true;
             this.TopMost = true;
+            this.Location = new Point(Screen.PrimaryScreen.WorkingArea.Width - this.Width, Screen.PrimaryScreen.WorkingArea.Height - this.Height);
+            this.Size = new Size(this.Width + 1, this.Height);
         }
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
@@ -306,6 +381,8 @@ namespace HotspotRecorder
         {
             if (chkGenerateHotspots.Checked)
                 AutoGenerateHotspot();
+            if (checkedpoints != null)
+                UpdateCheckedPoints();
         }
 
         private void btnLoadProfile_Click(object sender, EventArgs e)
@@ -417,6 +494,10 @@ namespace HotspotRecorder
         {
             ListBox lb = theSelectedTab();
             if (lb == null) return;
+            if (lb.SelectedIndex < 0)
+                return;
+            if (MessageBox.Show("This will delete the currently selected point(s)! Continue?", "Delete", MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation) == System.Windows.Forms.DialogResult.Cancel)
+                return;
             List<string> newlist = new List<string>();
 
             for (int x = 0; x < lb.Items.Count; x++)
@@ -425,6 +506,23 @@ namespace HotspotRecorder
                     newlist.Add(lb.Items[x].ToString());
             }
 
+            lb.Items.Clear();
+            lb.Items.AddRange(newlist.ToArray());
+            ClearPoints();
+        }
+
+        private void btnSetTop_Click(object sender, EventArgs e)
+        {
+            ListBox lb = theSelectedTab();
+            if (lb == null) return;
+            if (lb.SelectedIndex < 0)
+                return;
+            List<string> newlist = new List<string>();
+            int top = lb.SelectedIndex;
+            for (int i = top; i < lb.Items.Count; i++)
+                newlist.Add(lb.Items[i].ToString());
+            for (int i = 0; i < top; i++)
+                newlist.Add(lb.Items[i].ToString());
             lb.Items.Clear();
             lb.Items.AddRange(newlist.ToArray());
             ClearPoints();
@@ -454,6 +552,16 @@ namespace HotspotRecorder
             if (lb.SelectedIndex < 0)
                 return;
             GoTo(lb.Items[lb.SelectedIndex].ToString());
+        }
+
+        private void btnCheckPoints_Click(object sender, EventArgs e)
+        {
+            ListBox lb = theSelectedTab();
+            if (lb == null) return;
+            points = new List<HotspotRecorderPlugin.XYZ>();
+            for (int i = 0; i < lb.Items.Count; i++)
+                points.Add(StringToPoint(lb.Items[i].ToString()));
+            queue.Enqueue(new KeyValuePair<string, object>("CheckHotspots", points));
         }
 
         private void lstBlackspots_DoubleClick(object sender, EventArgs e)
@@ -488,6 +596,11 @@ namespace HotspotRecorder
                 e.Graphics.FillRectangle(new SolidBrush(Color.Yellow), e.Bounds);
             e.Graphics.DrawString(lst.Items[e.Index].ToString(), e.Font, Brushes.Black, e.Bounds, StringFormat.GenericDefault);
             e.DrawFocusRectangle();
+        }
+
+        private void statusStrip1_Resize(object sender, EventArgs e)
+        {
+            toolStripProgressBar1.Width = statusStrip1.Width - 20;
         }
 
     }
