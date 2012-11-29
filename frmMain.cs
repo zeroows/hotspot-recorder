@@ -158,19 +158,44 @@ namespace HotspotRecorder
             }
 
         }
+
+        private void HandleError(Exception ex)
+        {
+            string s = string.Format("Error! Make sure HonorBuddy is running, with combat bot, or grind bot with an empty profile. {0}", ex.Message);
+            System.Diagnostics.Debug.Print(s);
+            MessageBox.Show(s, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+        }
+
         private void AddSpot(ListBox lb, string spottype, HotspotRecorderPlugin.XYZ spot)
         {
-            lb.Items.Add(PointToString(spottype, spot));
-            int visibleItems = lb.ClientSize.Height / lb.ItemHeight;
-            lb.TopIndex = Math.Max(lb.Items.Count - visibleItems + 1, 0);
-            ClearPoints();
+            try
+            {
+
+                lb.Items.Add(PointToString(spottype, spot));
+                int visibleItems = lb.ClientSize.Height / lb.ItemHeight;
+                lb.TopIndex = Math.Max(lb.Items.Count - visibleItems + 1, 0);
+                ClearPoints();
+            }
+            catch (Exception ex)
+            {
+                HandleError(ex);
+            }
         }
         private void AddVendor(ListBox lb, string vendorname, int entry, string vendortype, HotspotRecorderPlugin.XYZ spot)
         {
-            lb.Items.Add(PointToVendorString(vendorname, entry, vendortype, spot));
-            int visibleItems = lb.ClientSize.Height / lb.ItemHeight;
-            lb.TopIndex = Math.Max(lb.Items.Count - visibleItems + 1, 0);
-            ClearPoints();
+            try
+            {
+
+                lb.Items.Add(PointToVendorString(vendorname, entry, vendortype, spot));
+                int visibleItems = lb.ClientSize.Height / lb.ItemHeight;
+                lb.TopIndex = Math.Max(lb.Items.Count - visibleItems + 1, 0);
+                ClearPoints();
+            }
+            catch (Exception ex)
+            {
+                HandleError(ex);
+            }
+
         }
         private void GoTo(string input)
         {
@@ -263,82 +288,90 @@ namespace HotspotRecorder
         #region Routine called by Honorbuddy Pulse method
         public void On_Update(HotspotRecorderPlugin.CustomEventArgs args)
         {
-            string fmt = "{0:0.000}, {1:0.000}, {2:0.000}";
-            targetlocation = args.targetlocation;
-            targetname = args.targetname;
-            targetentry = args.targetentry;
-            isrepair = args.isrepair;
-            mylocation = args.mylocation;
-            CalculateClosestHotspot();
-            // Do a thread-safe update on the fields 
-            // (this routine (On_Update) is called by an external thread.)
-            this.lblLocationNPC.Invoke((MethodInvoker)(() => lblLocationNPC.Text = (targetlocation == null ? "<target name>" : string.Format(fmt, targetlocation.X, targetlocation.Y, targetlocation.Z))));
-            this.lblLocationMe.Invoke((MethodInvoker)(() => lblLocationMe.Text = (mylocation == null ? "<my location>" : string.Format(fmt, mylocation.X, mylocation.Y, mylocation.Z))));
-            this.lblNPCName.Invoke((MethodInvoker)(() => lblNPCName.Text = (targetname == null ? "<target location>" : targetname)));
-
-            if (queue.Count > 0)
+            try
             {
-                int commandcnt = queue.Count;
-                Cursor.Current = Cursors.WaitCursor;
-                for (int i = 0; i < commandcnt; i++)
+                string fmt = "{0:0.000}, {1:0.000}, {2:0.000}";
+                targetlocation = args.targetlocation;
+                targetname = args.targetname;
+                targetentry = args.targetentry;
+                isrepair = args.isrepair;
+                mylocation = args.mylocation;
+                CalculateClosestHotspot();
+                // Do a thread-safe update on the fields 
+                // (this routine (On_Update) is called by an external thread.)
+                this.lblLocationNPC.Invoke((MethodInvoker)(() => lblLocationNPC.Text = (targetlocation == null ? "<target name>" : string.Format(fmt, targetlocation.X, targetlocation.Y, targetlocation.Z))));
+                this.lblLocationMe.Invoke((MethodInvoker)(() => lblLocationMe.Text = (mylocation == null ? "<my location>" : string.Format(fmt, mylocation.X, mylocation.Y, mylocation.Z))));
+                this.lblNPCName.Invoke((MethodInvoker)(() => lblNPCName.Text = (targetname == null ? "<target location>" : targetname)));
+
+                if (queue.Count > 0)
                 {
-                    KeyValuePair<string, object> kvp = queue.Dequeue();
-                    display("Executing queued command {0} of {1}", i + 1, commandcnt);
-                    switch (kvp.Key)
+                    int commandcnt = queue.Count;
+                    Cursor.Current = Cursors.WaitCursor;
+                    for (int i = 0; i < commandcnt; i++)
                     {
-                        case "goto":
-                            HotspotRecorderPlugin.XYZ xyz = (HotspotRecorderPlugin.XYZ)kvp.Value;
-                            display("Go to {0:0.0000}, {1:0.0000}, {2:0.0000}", xyz.X, xyz.Y, xyz.Z);
-                            if (StyxWoW.Me == null)
-                                return;
-                            WoWPoint pt = new WoWPoint(xyz.X, xyz.Y, xyz.Z);
-                            while (!StyxWoW.Me.Combat && StyxWoW.Me.Location.Distance(pt) >= 5)
-                            {
-                                Flightor.MoveTo(pt);
-                                Thread.Sleep(500);
-                            }
-                            break;
-                        case "CheckHotspots":
-                            List<HotspotRecorderPlugin.XYZ> list = (List<HotspotRecorderPlugin.XYZ>)kvp.Value;
-                            for (int j = 0; j < list.Count; j++)
-                                list[j].navigable = true;
-                            this.Invoke((MethodInvoker)(() => toolStripProgressBar1.Maximum = list.Count));
-                            int badpts = 0;
-                            for (int j = 1; j < list.Count; j++)
-                            {
-                                this.Invoke((MethodInvoker)(() => toolStripProgressBar1.Value = j));
+                        KeyValuePair<string, object> kvp = queue.Dequeue();
+                        display("Executing queued command {0} of {1}", i + 1, commandcnt);
+                        switch (kvp.Key)
+                        {
+                            case "goto":
+                                HotspotRecorderPlugin.XYZ xyz = (HotspotRecorderPlugin.XYZ)kvp.Value;
+                                display("Go to {0:0.0000}, {1:0.0000}, {2:0.0000}", xyz.X, xyz.Y, xyz.Z);
                                 if (StyxWoW.Me == null)
+                                    return;
+                                WoWPoint pt = new WoWPoint(xyz.X, xyz.Y, xyz.Z);
+                                while (!StyxWoW.Me.Combat && StyxWoW.Me.Location.Distance(pt) >= 5)
                                 {
-                                    // Do a fake check here.
-                                    if (j % 10 == 0)
+                                    Flightor.MoveTo(pt);
+                                    Thread.Sleep(500);
+                                }
+                                break;
+                            case "CheckHotspots":
+                                List<HotspotRecorderPlugin.XYZ> list = (List<HotspotRecorderPlugin.XYZ>)kvp.Value;
+                                for (int j = 0; j < list.Count; j++)
+                                    list[j].navigable = true;
+                                this.Invoke((MethodInvoker)(() => toolStripProgressBar1.Maximum = list.Count));
+                                int badpts = 0;
+                                for (int j = 1; j < list.Count; j++)
+                                {
+                                    this.Invoke((MethodInvoker)(() => toolStripProgressBar1.Value = j));
+                                    if (StyxWoW.Me == null)
                                     {
-                                        list[j].navigable = false;
-                                        badpts++;
+                                        // Do a fake check here.
+                                        if (j % 10 == 0)
+                                        {
+                                            list[j].navigable = false;
+                                            badpts++;
+                                        }
+                                    }
+                                    else
+                                    {
+                                        // Do a real check here.
+                                        if (!Styx.Pathing.Navigator.CanNavigateFully(PointToWoWPoint(list[j - 1]), PointToWoWPoint(list[j])))
+                                        {
+                                            list[j].navigable = false;
+                                            badpts++;
+                                        }
                                     }
                                 }
-                                else
-                                {
-                                    // Do a real check here.
-                                    if (!Styx.Pathing.Navigator.CanNavigateFully(PointToWoWPoint(list[j-1]), PointToWoWPoint(list[j])))
-                                    {
-                                        list[j].navigable = false;
-                                        badpts++;
-                                    }
-                                }
-                            }
-                            display("Done checking hotspots, {0} bad points found out of a total of {1}.", badpts, list.Count);
-                            checkedpoints = list;
-                            this.Invoke((MethodInvoker)(() => toolStripProgressBar1.Value = list.Count));
-                            break;
-                        default:
-                            display("Unknown command {0}!", kvp.Key);
-                            break;
+                                display("Done checking hotspots, {0} bad points found out of a total of {1}.", badpts, list.Count);
+                                checkedpoints = list;
+                                this.Invoke((MethodInvoker)(() => toolStripProgressBar1.Value = list.Count));
+                                break;
+                            default:
+                                display("Unknown command {0}!", kvp.Key);
+                                break;
+                        }
+                        display("Done executing queued command {0} of {1}", i + 1, commandcnt);
                     }
-                    display("Done executing queued command {0} of {1}", i + 1, commandcnt);
+                    Cursor.Current = Cursors.Default;
                 }
-                Cursor.Current = Cursors.Default;
+            }
+            catch (Exception ex)
+            {
+                HandleError(ex);
             }
         }
+
         #endregion
 
         public frmMain()
