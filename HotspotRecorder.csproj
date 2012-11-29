@@ -35,7 +35,7 @@
   </PropertyGroup>
   <ItemGroup>
     <Reference Include="Honorbuddy">
-      <HintPath>..\..\..\..\Downloads\Honorbuddy\Honorbuddy.exe</HintPath>
+      <HintPath>..\FTW\bin\Debug\Honorbuddy.exe</HintPath>
     </Reference>
     <Reference Include="PresentationCore" />
     <Reference Include="System" />
@@ -49,7 +49,7 @@
     <Reference Include="System.Windows.Forms" />
     <Reference Include="System.Xml" />
     <Reference Include="Tripper.Tools">
-      <HintPath>..\..\..\..\Downloads\Honorbuddy\Tripper.Tools.dll</HintPath>
+      <HintPath>..\FTW\bin\Debug\Tripper.Tools.dll</HintPath>
     </Reference>
   </ItemGroup>
   <ItemGroup>
@@ -90,7 +90,7 @@
   </ItemGroup>
   <Import Project="$(MSBuildToolsPath)\Microsoft.CSharp.targets" />
   <PropertyGroup>
-    <PostBuildEvent>copy "$(ProjectDir)*.cs" "C:\Users\Cindy\Downloads\Honorbuddy\Plugins\Hotspot Recorder"
+    <PostBuildEvent>copy "$(ProjectDir)*.cs" "C:\Users\Tyaldan\Desktop\Honorbuddy 2.5.6441.507\Plugins\Hotspot Recorder"
 </PostBuildEvent>
   </PropertyGroup>
   <!-- To modify your build process, add your task inside one of the targets below and uncomment it. 
