@@ -291,14 +291,11 @@ namespace HotspotRecorder
                             display("Go to {0:0.0000}, {1:0.0000}, {2:0.0000}", xyz.X, xyz.Y, xyz.Z);
                             if (StyxWoW.Me == null)
                                 return;
-                            int ctr = 0;
-                            int maxloops = 100;
                             WoWPoint pt = new WoWPoint(xyz.X, xyz.Y, xyz.Z);
-                            while (!StyxWoW.Me.IsMoving && !StyxWoW.Me.Combat && ctr < maxloops)
+                            while (!StyxWoW.Me.Combat && StyxWoW.Me.Location.Distance(pt) >= 5)
                             {
                                 Flightor.MoveTo(pt);
-                                Thread.Sleep(10);
-                                ctr++;
+                                Thread.Sleep(500);
                             }
                             break;
                         case "CheckHotspots":
