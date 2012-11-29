@@ -170,7 +170,8 @@ namespace HotspotRecorder
         {
             try
             {
-
+                if (spot == null)
+                    throw new Exception("Spot is null");
                 lb.Items.Add(PointToString(spottype, spot));
                 int visibleItems = lb.ClientSize.Height / lb.ItemHeight;
                 lb.TopIndex = Math.Max(lb.Items.Count - visibleItems + 1, 0);
@@ -185,7 +186,8 @@ namespace HotspotRecorder
         {
             try
             {
-
+                if (spot == null)
+                    throw new Exception("Spot is null");
                 lb.Items.Add(PointToVendorString(vendorname, entry, vendortype, spot));
                 int visibleItems = lb.ClientSize.Height / lb.ItemHeight;
                 lb.TopIndex = Math.Max(lb.Items.Count - visibleItems + 1, 0);
@@ -299,9 +301,9 @@ namespace HotspotRecorder
                 CalculateClosestHotspot();
                 // Do a thread-safe update on the fields 
                 // (this routine (On_Update) is called by an external thread.)
-                this.lblLocationNPC.Invoke((MethodInvoker)(() => lblLocationNPC.Text = (targetlocation == null ? "<target name>" : string.Format(fmt, targetlocation.X, targetlocation.Y, targetlocation.Z))));
+                this.lblLocationNPC.Invoke((MethodInvoker)(() => lblLocationNPC.Text = (targetlocation == null ? "<target location>" : string.Format(fmt, targetlocation.X, targetlocation.Y, targetlocation.Z))));
                 this.lblLocationMe.Invoke((MethodInvoker)(() => lblLocationMe.Text = (mylocation == null ? "<my location>" : string.Format(fmt, mylocation.X, mylocation.Y, mylocation.Z))));
-                this.lblNPCName.Invoke((MethodInvoker)(() => lblNPCName.Text = (targetname == null ? "<target location>" : targetname)));
+                this.lblNPCName.Invoke((MethodInvoker)(() => lblNPCName.Text = (targetname == null ? "<target name>" : targetname)));
 
                 if (queue.Count > 0)
                 {
