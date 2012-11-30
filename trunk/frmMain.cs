@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.ComponentModel;
 using System.Data;
 using System.Drawing;
+using System.Globalization;
 using System.Linq;
 using System.Text;
 using System.Threading;
@@ -32,6 +33,7 @@ namespace HotspotRecorder
         private List<HotspotRecorderPlugin.XYZ> points = null;
         private HotspotRecorderPlugin fakeplugin = null;
         private List<HotspotRecorderPlugin.XYZ> checkedpoints = null;
+        static CultureInfo culture = CultureInfo.CreateSpecificCulture("en-US");
         private string header = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <HBProfile>
   <Name>{0}</Name>
@@ -96,7 +98,7 @@ namespace HotspotRecorder
             string suffix = string.Empty;
             if (spottype.ToLower() == "blackspot")
                 suffix = string.Format(@"Radius=""{0}""", this.txtBlackspotRadius.Text);
-            string s = string.Format(@"<{0} X=""{1:0.0000}"" Y=""{2:0.0000}"" Z=""{3:0.0000}"" {4} />", spottype, spot.X, spot.Y, spot.Z, suffix);
+            string s = string.Format(culture, @"<{0} X=""{1:0.0000}"" Y=""{2:0.0000}"" Z=""{3:0.0000}"" {4} />", spottype, spot.X, spot.Y, spot.Z, suffix);
             return s;
         }
 
@@ -107,7 +109,7 @@ namespace HotspotRecorder
 
         private string PointToVendorString(string vendorname, int entry, string vendortype, HotspotRecorderPlugin.XYZ spot)
         {
-            string s = string.Format(@"<Vendor Name=""{0}"" Entry=""{1}"" Type=""{2}"" X=""{3:0.0000}"" Y=""{4:0.0000}"" Z=""{5:0.0000}"" />", vendorname, entry, vendortype, spot.X, spot.Y, spot.Z);
+            string s = string.Format(culture, @"<Vendor Name=""{0}"" Entry=""{1}"" Type=""{2}"" X=""{3:0.0000}"" Y=""{4:0.0000}"" Z=""{5:0.0000}"" />", vendorname, entry, vendortype, spot.X, spot.Y, spot.Z);
             return s;
         }
         private HotspotRecorderPlugin.XYZ StringToPoint(string input)
