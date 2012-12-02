@@ -34,6 +34,7 @@ namespace HotspotRecorder
         private HotspotRecorderPlugin fakeplugin = null;
         private List<HotspotRecorderPlugin.XYZ> checkedpoints = null;
         static CultureInfo culture = CultureInfo.CreateSpecificCulture("en-US");
+        private bool autorun = false;
         private string header = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <HBProfile>
   <Name>{0}</Name>
@@ -165,18 +166,20 @@ namespace HotspotRecorder
         {
             string s = string.Format("Error! Make sure HonorBuddy is running, with combat bot, or grind bot with an empty profile. {0}", ex.Message);
             System.Diagnostics.Debug.Print(s);
+            System.Diagnostics.Debug.Print(ex.ToString());
             MessageBox.Show(s, "Error", MessageBoxButtons.OK, MessageBoxIcon.Error);
+            throw ex;
         }
 
-        private void AddSpot(ListBox lb, string spottype, HotspotRecorderPlugin.XYZ spot)
+        private void AddSpot(ListView lb, string spottype, HotspotRecorderPlugin.XYZ spot)
         {
             try
             {
                 if (spot == null)
                     throw new Exception("Spot is null");
                 lb.Items.Add(PointToString(spottype, spot));
-                int visibleItems = lb.ClientSize.Height / lb.ItemHeight;
-                lb.TopIndex = Math.Max(lb.Items.Count - visibleItems + 1, 0);
+                //int visibleItems = lb.ClientSize.Height / lb.ItemHeight;
+                //lb.TopIndex = Math.Max(lb.Items.Count - visibleItems + 1, 0);
                 ClearPoints();
             }
             catch (Exception ex)
@@ -184,15 +187,15 @@ namespace HotspotRecorder
                 HandleError(ex);
             }
         }
-        private void AddVendor(ListBox lb, string vendorname, int entry, string vendortype, HotspotRecorderPlugin.XYZ spot)
+        private void AddVendor(ListView lb, string vendorname, int entry, string vendortype, HotspotRecorderPlugin.XYZ spot)
         {
             try
             {
                 if (spot == null)
                     throw new Exception("Spot is null");
                 lb.Items.Add(PointToVendorString(vendorname, entry, vendortype, spot));
-                int visibleItems = lb.ClientSize.Height / lb.ItemHeight;
-                lb.TopIndex = Math.Max(lb.Items.Count - visibleItems + 1, 0);
+                //int visibleItems = lb.ClientSize.Height / lb.ItemHeight;
+                //lb.TopIndex = Math.Max(lb.Items.Count - visibleItems + 1, 0);
                 ClearPoints();
             }
             catch (Exception ex)
@@ -216,33 +219,55 @@ namespace HotspotRecorder
         }
         private void CalculateClosestHotspot()
         {
-            if (points == null)
+            if (this.InvokeRequired)
             {
-                points = new List<HotspotRecorderPlugin.XYZ>();
-                for (int i = 0; i < lstHotSpots.Items.Count; i++)
-                    points.Add(StringToPoint(lstHotSpots.Items[i].ToString()));
+                this.BeginInvoke(new MethodInvoker(
+                    () => CalculateClosestHotspot()
+                ));
             }
-            double closestdist = -1;
-            int closestindex = -1;
-            for (int i = 0; i < points.Count; i++)
+            else
             {
-                double dist = FastDistance(mylocation, points[i]);
-                if (closestdist < 0 || dist < closestdist)
+                if (points == null)
                 {
-                    closestdist = dist;
-                    closestindex = i;
+                    points = new List<HotspotRecorderPlugin.XYZ>();
+                    for (int i = 0; i < lstHotSpots.Items.Count; i++)
+                    {
+                        points.Add(StringToPoint(lstHotSpots.Items[i].Text));
+                    }
+                }
+                double closestdist = -1;
+                int closestindex = -1;
+                for (int i = 0; i < points.Count; i++)
+                {
+                    double dist = FastDistance(mylocation, points[i]);
+                    if (closestdist < 0 || dist < closestdist)
+                    {
+                        closestdist = dist;
+                        closestindex = i;
+                    }
+                }
+                if (closesthotspot != closestindex)
+                {
+                    display("Closest hotspot is {0}", closestindex);
+                    closesthotspot = closestindex;
+                    for (int i = 0; i < lstHotSpots.Items.Count; i++)
+                    {
+                        ListViewItem lvi = lstHotSpots.Items[i];
+                        if (lvi.BackColor != Color.White)
+                            lvi.BackColor = Color.White;
+                    }
+                    lstHotSpots.Items[closestindex].BackColor = Color.Yellow;
+                    lstHotSpots.Invalidate();
                 }
             }
-            closesthotspot = closestindex;
-            lstHotSpots.Invalidate();
         }
-        private ListBox theSelectedTab()
+        private ListView theSelectedTab()
         {
-            ListBox lb;
+            ListView lb;
             if (tabMain.SelectedTab.Text == "Hotspots")
                 lb = lstHotSpots;
             else if (tabMain.SelectedTab.Text == "Blackspots")
-                lb = lstBlackspots;
+                lb = lstBlackSpots;
             else if (tabMain.SelectedTab.Text == "Mailboxes")
                 lb = lstMailboxes;
             else if (tabMain.SelectedTab.Text == "NPC")
@@ -261,7 +286,7 @@ namespace HotspotRecorder
             // Update the current list with those points.
             List<HotspotRecorderPlugin.XYZ> localpoints = checkedpoints;
             checkedpoints = null;
-            ListBox lb = theSelectedTab();
+            ListView lb = theSelectedTab();
             List<string> lst = new List<string>();
             if (lb == null) return;
             for (int i = 0; i < localpoints.Count; i++)
@@ -271,7 +296,7 @@ namespace HotspotRecorder
                     s = PointToVendorString(this.targetname, this.targetentry, (this.isrepair ? "Repair" : "Food"), localpoints[i]);
                 else if (lb == this.lstMailboxes)
                     s = PointToString("Mailbox", localpoints[i]);
-                else if (lb == this.lstBlackspots)
+                else if (lb == this.lstBlackSpots)
                     s = PointToString("Blackspot", localpoints[i]);
                 else if (lb == this.lstHotSpots)
                     s = PointToString("Hotspot", localpoints[i]);
@@ -283,7 +308,8 @@ namespace HotspotRecorder
                 lst.Add(s2);
             }
             lb.Items.Clear();
-            lb.Items.AddRange(lst.ToArray());
+            foreach (string s in lst)
+                lb.Items.Add(new ListViewItem(s));
             ClearPoints();
         }
 
@@ -292,8 +318,8 @@ namespace HotspotRecorder
         #region Routine called by Honorbuddy Pulse method
         public void On_Update(HotspotRecorderPlugin.CustomEventArgs args)
         {
-            try
-            {
+            //try
+            //{
                 string fmt = "{0:0.000}, {1:0.000}, {2:0.000}";
                 targetlocation = args.targetlocation;
                 targetname = args.targetname;
@@ -318,16 +344,45 @@ namespace HotspotRecorder
                         switch (kvp.Key)
                         {
                             case "goto":
+                                autorun = true;
                                 HotspotRecorderPlugin.XYZ xyz = (HotspotRecorderPlugin.XYZ)kvp.Value;
                                 display("Go to {0:0.0000}, {1:0.0000}, {2:0.0000}", xyz.X, xyz.Y, xyz.Z);
                                 if (StyxWoW.Me == null)
                                     return;
                                 WoWPoint pt = new WoWPoint(xyz.X, xyz.Y, xyz.Z);
-                                while (!StyxWoW.Me.Combat && StyxWoW.Me.Location.Distance(pt) >= 5)
+                                while (autorun && StyxWoW.Me.Location.Distance(pt) >= 5 && (Styx.CommonBot.BotManager.Current.Name == "Grind Bot" || !StyxWoW.Me.Combat))
                                 {
-                                    Flightor.MoveTo(pt);
+                                    CalculateClosestHotspot();
+                                    Navigator.MoveTo(pt);
                                     Thread.Sleep(500);
                                 }
+                                if (StyxWoW.Me.Combat && StyxWoW.Me.Mounted)
+                                    Styx.CommonBot.Mount.Dismount();
+                                break;
+                            case "run":
+                                autorun = true;
+                                List<HotspotRecorderPlugin.XYZ> list2 = (List<HotspotRecorderPlugin.XYZ>)kvp.Value;
+                                int startpt = Math.Max(closesthotspot, 0);
+                                List<int> indexes = new List<int>();
+                                for (int j = startpt; j < list2.Count; j++)
+                                    indexes.Add(j);
+                                for (int j = 0; j < startpt; j++)
+                                    indexes.Add(j);
+                                for (int j = 0; j < indexes.Count; j++)
+                                {
+                                    if (!autorun || (StyxWoW.Me.Combat && Styx.CommonBot.BotManager.Current.Name != "Grind Bot"))
+                                        break;
+                                    WoWPoint pt2 = PointToWoWPoint(list2[indexes[j]]);
+                                    display("Running to point {0} {1}", indexes[j], list2[indexes[j]].ToString());
+                                    while (autorun && StyxWoW.Me.Location.Distance(pt2) >= 5 && (Styx.CommonBot.BotManager.Current.Name == "Grind Bot" || !StyxWoW.Me.Combat))
+                                    {
+                                        CalculateClosestHotspot();
+                                        Navigator.MoveTo(pt2);
+                                        Thread.Sleep(500);
+                                    }
+                                }
+                                if (StyxWoW.Me.Combat && StyxWoW.Me.Mounted)
+                                    Styx.CommonBot.Mount.Dismount();
                                 break;
                             case "CheckHotspots":
                                 List<HotspotRecorderPlugin.XYZ> list = (List<HotspotRecorderPlugin.XYZ>)kvp.Value;
@@ -369,11 +424,12 @@ namespace HotspotRecorder
                     }
                     Cursor.Current = Cursors.Default;
                 }
-            }
-            catch (Exception ex)
-            {
-                HandleError(ex);
-            }
+            //}
+            //catch (Exception ex)
+            //{
+            //    if (!(ex is System.Threading.ThreadAbortException))
+            //        HandleError(ex);
+            //}
         }
 
         #endregion
@@ -395,10 +451,6 @@ namespace HotspotRecorder
             }
             HotspotRecorderPlugin.UpdateUI += updateui;
             timer1.Enabled = true;
-            lstHotSpots.HorizontalScrollbar = true;
-            lstBlackspots.HorizontalScrollbar = true;
-            lstMailboxes.HorizontalScrollbar = true;
-            lstNPC.HorizontalScrollbar = true;
             this.TopMost = true;
             this.Location = new Point(Screen.PrimaryScreen.WorkingArea.Width - this.Width, Screen.PrimaryScreen.WorkingArea.Height - this.Height);
             this.Size = new Size(this.Width + 1, this.Height);
@@ -406,17 +458,53 @@ namespace HotspotRecorder
 
         private void Form1_FormClosing(object sender, FormClosingEventArgs e)
         {
-            HotspotRecorderPlugin.UpdateUI -= updateui;
-            if (newThread != null)
-                newThread.Abort();
+            try
+            {
+                HotspotRecorderPlugin.UpdateUI -= updateui;
+                if (newThread != null)
+                    newThread.Abort();
+            }
+            catch (Exception ex)
+            {
+            }
         }
 
         private void timer1_Tick(object sender, EventArgs e)
         {
+            if (!Styx.CommonBot.TreeRoot.IsRunning && StyxWoW.Me != null)
+            {
+                if (btnAddBlackspot.Enabled == true)
+                {
+                    ShowControls(false);
+                    string s = "Choose 'Combat Bot' or 'Grind Bot' with an empty profile, then click 'Start' on Honorbuddy.";
+                    display(s);
+                    if (StyxWoW.Me != null)
+                        MessageBox.Show(s);
+                }
+            }
+            else if (btnAddBlackspot.Enabled == false)
+            {
+                ShowControls(true);
+            }
             if (chkGenerateHotspots.Checked)
                 AutoGenerateHotspot();
             if (checkedpoints != null)
                 UpdateCheckedPoints();
+        }
+
+        private void ShowControls(bool value)
+        {
+            btnAddHotspot.Enabled = value;
+            btnAddBlackspot.Enabled = value;
+            btnAddMailbox.Enabled = value;
+            btnAddVendor.Enabled = value;
+            chkGenerateHotspots.Enabled = value;
+            btnPrev.Enabled = value;
+            btnNext.Enabled = value;
+            btnGoTo.Enabled = value;
+            btnRunPoints.Enabled = value;
+            btnCheckPoints.Enabled = value;
+            btnReplace.Enabled = Visible;
         }
 
         private void btnLoadProfile_Click(object sender, EventArgs e)
@@ -431,7 +519,7 @@ namespace HotspotRecorder
                 profile = openFileDialog1.FileName;
                 string[] lines = System.IO.File.ReadAllLines(profile);
                 lstHotSpots.Items.Clear();
-                lstBlackspots.Items.Clear();
+                lstBlackSpots.Items.Clear();
                 lstNPC.Items.Clear();
                 lstMailboxes.Items.Clear();
                 foreach (string origline in lines)
@@ -440,7 +528,7 @@ namespace HotspotRecorder
                     if (line.StartsWith("<Hotspot "))
                         lstHotSpots.Items.Add(line);
                     else if (line.StartsWith("<Blackspot "))
-                        lstBlackspots.Items.Add(line);
+                        lstBlackSpots.Items.Add(line);
                     else if (line.StartsWith("<Vendor "))
                         lstNPC.Items.Add(line);
                     else if (line.StartsWith("<Mailbox "))
@@ -467,23 +555,23 @@ namespace HotspotRecorder
                 string shortfilename = System.IO.Path.GetFileName(profile);
                 lines.Add(string.Format(header, shortfilename));
                 lines.Add("<Vendors>");
-                foreach (string s in lstNPC.Items)
-                    lines.Add(string.Format("    {0}", s));
+                for (int i = 0; i < lstNPC.Items.Count; i++)
+                    lines.Add(string.Format("    {0}", lstNPC.Items[i].Text));
                 lines.Add("</Vendors>");
                 lines.Add("");
                 lines.Add("<Mailboxes>");
-                foreach (string s in lstMailboxes.Items)
-                    lines.Add(string.Format("    {0}", s));
+                for (int i = 0; i < lstMailboxes.Items.Count; i++)
+                    lines.Add(string.Format("    {0}", lstMailboxes.Items[i].Text));
                 lines.Add("</Mailboxes>");
                 lines.Add("");
                 lines.Add("<Blackspots>");
-                foreach (string s in lstBlackspots.Items)
-                    lines.Add(string.Format("    {0}", s));
+                for (int i = 0; i < lstBlackSpots.Items.Count; i++)
+                    lines.Add(string.Format("    {0}", lstBlackSpots.Items[i].Text));
                 lines.Add("</Blackspots>");
                 lines.Add("");
                 lines.Add("<Hotspots>");
-                foreach (string s in lstHotSpots.Items)
-                    lines.Add(string.Format("    {0}", s));
+                for (int i = 0; i < lstHotSpots.Items.Count; i++)
+                    lines.Add(string.Format("    {0}", lstHotSpots.Items[i].Text));
                 lines.Add("</Hotspots>");
                 lines.Add("");
                 lines.Add("</HBProfile>");
@@ -500,7 +588,7 @@ namespace HotspotRecorder
 
         private void btnAddBlackspot_Click(object sender, EventArgs e)
         {
-            AddSpot(lstBlackspots, "Blackspot", mylocation);
+            AddSpot(lstBlackSpots, "Blackspot", mylocation);
         }
 
         private void btnAddMailbox_Click(object sender, EventArgs e)
@@ -515,121 +603,177 @@ namespace HotspotRecorder
 
         private void btnReverse_Click(object sender, EventArgs e)
         {
-            ListBox lb = theSelectedTab();
+            ListView lb = theSelectedTab();
             if (lb == null) return;
             string[] lst = lb.Items.Cast<string>().ToArray();
             Array.Reverse(lst);
             lb.Items.Clear();
-            lb.Items.AddRange(lst);
+            foreach (string s in lst)
+                lb.Items.Add(new ListViewItem(s));
             ClearPoints();
         }
 
         private void btnDelete_Click(object sender, EventArgs e)
         {
-            ListBox lb = theSelectedTab();
+            ListView lb = theSelectedTab();
             if (lb == null) return;
-            if (lb.SelectedIndex < 0)
+            if (lb.SelectedIndices.Count == 0)
                 return;
             if (MessageBox.Show("This will delete the currently selected point(s)! Continue?", "Delete", MessageBoxButtons.OKCancel, MessageBoxIcon.Exclamation) == System.Windows.Forms.DialogResult.Cancel)
                 return;
             List<string> newlist = new List<string>();
 
-            for (int x = 0; x < lb.Items.Count; x++)
-            {
-                if (lb.GetSelected(x) == false)
-                    newlist.Add(lb.Items[x].ToString());
-            }
+            foreach (Object obj in lb.SelectedItems)
+                newlist.Add(obj.ToString());
 
             lb.Items.Clear();
-            lb.Items.AddRange(newlist.ToArray());
+            foreach (String s in newlist)
+                lb.Items.Add(new ListViewItem(s));
             ClearPoints();
         }
 
         private void btnSetTop_Click(object sender, EventArgs e)
         {
-            ListBox lb = theSelectedTab();
+            ListView lb = theSelectedTab();
             if (lb == null) return;
-            if (lb.SelectedIndex < 0)
+            if (lb.SelectedIndices.Count == 0)
                 return;
             List<string> newlist = new List<string>();
-            int top = lb.SelectedIndex;
+            int top = lb.SelectedIndices[0];
             for (int i = top; i < lb.Items.Count; i++)
-                newlist.Add(lb.Items[i].ToString());
+                newlist.Add(lb.Items[i].Text);
             for (int i = 0; i < top; i++)
-                newlist.Add(lb.Items[i].ToString());
+                newlist.Add(lb.Items[i].Text);
             lb.Items.Clear();
-            lb.Items.AddRange(newlist.ToArray());
+            foreach (String s in newlist)
+                lb.Items.Add(new ListViewItem(s));
             ClearPoints();
         }
 
         private void btnReplace_Click(object sender, EventArgs e)
         {
-            ListBox lb = theSelectedTab();
+            ListView lb = theSelectedTab();
             if (lb == null) return;
-            if (lb.SelectedIndex < 0)
+            if (lb.SelectedIndices.Count == 0)
                 return;
+            int index = lb.SelectedIndices[0];
             if (lb == this.lstNPC)
-                lb.Items[lb.SelectedIndex] = PointToVendorString(this.targetname, this.targetentry, (this.isrepair ? "Repair" : "Food"), targetlocation);
+                lb.Items[index] = new ListViewItem(PointToVendorString(this.targetname, this.targetentry, (this.isrepair ? "Repair" : "Food"), targetlocation));
             else if (lb == this.lstMailboxes)
-                lb.Items[lb.SelectedIndex] = PointToString("Mailbox", this.mylocation);
-            else if (lb == this.lstBlackspots)
-                lb.Items[lb.SelectedIndex] = PointToString("Blackspot", this.mylocation);
+                lb.Items[index] = new ListViewItem(PointToString("Mailbox", this.mylocation));
+            else if (lb == this.lstBlackSpots)
+                lb.Items[index] = new ListViewItem(PointToString("Blackspot", this.mylocation));
             else if (lb == this.lstHotSpots)
-                lb.Items[lb.SelectedIndex] = PointToString("Hotspot", this.mylocation);
+                lb.Items[index] = new ListViewItem(PointToString("Hotspot", this.mylocation));
             ClearPoints();
         }
 
         private void btnGoTo_Click(object sender, EventArgs e)
         {
-            ListBox lb = theSelectedTab();
+            ListView lb = theSelectedTab();
             if (lb == null) return;
-            if (lb.SelectedIndex < 0)
+            if (lb.SelectedIndices.Count == 0)
                 return;
-            GoTo(lb.Items[lb.SelectedIndex].ToString());
+            GoTo(lb.Items[lb.SelectedIndices[0]].ToString());
         }
 
-        private void btnCheckPoints_Click(object sender, EventArgs e)
+        private void btnPrev_Click(object sender, EventArgs e)
         {
-            ListBox lb = theSelectedTab();
+            ListView lb = theSelectedTab();
+            if (lb == null) return;
+            int index = -1;
+            if (lb.SelectedIndices.Count > 0)
+                index = lb.SelectedIndices[0];
+            lb.SelectedIndices.Clear();
+            int newindex = -1;
+            if (index <= 0)
+                newindex = lb.Items.Count - 1;
+            else
+                newindex = index - 1;
+            lb.Items[newindex].Selected = true;
+            GoTo(lb.Items[newindex].ToString());
+        }
+
+        private void btnNext_Click(object sender, EventArgs e)
+        {
+            ListView lb = theSelectedTab();
+            if (lb == null) return;
+            int index = -1;
+            if (lb.SelectedIndices.Count > 0)
+                index = lb.SelectedIndices[0];
+            lb.SelectedIndices.Clear();
+            int newindex = -1;
+            if (index >= lb.Items.Count - 1)
+                newindex = 0;
+            else
+                newindex = index + 1;
+            lb.Items[newindex].Selected = true;
+            GoTo(lb.Items[newindex].ToString());
+        }
+
+        private void btnRunPoints_Click(object sender, EventArgs e)
+        {
+            queue.Enqueue(new KeyValuePair<string, object>("run", points));
+        }
+
+        private void btnMove_Click(object sender, EventArgs e)
+        {
+            double adj;
+            if (double.TryParse(txtAdjustHeight.Text, out adj) == false)
+            {
+                display("Height adjustment must be a numeric integer!");
+                return;
+            }
+            // Only apply height adjustment to hotspots.
+            tabMain.SelectedIndex = 0;
+            ListView lb = lstHotSpots;
+            RefreshPoints();
+            lb.Items.Clear();
+            for (int i = 0; i < points.Count - 1; i++)
+            {
+                points[i].Z += adj;
+                lb.Items.Add(PointToString("Hotspot", points[i]));
+            }
+            display("{0} added to height of all hotspots.", adj);
+        }
+
+        private void RefreshPoints()
+        {
+            ListView lb = theSelectedTab();
             if (lb == null) return;
             points = new List<HotspotRecorderPlugin.XYZ>();
             for (int i = 0; i < lb.Items.Count; i++)
                 points.Add(StringToPoint(lb.Items[i].ToString()));
+        }
+
+        private void btnCheckPoints_Click(object sender, EventArgs e)
+        {
+            RefreshPoints();
             queue.Enqueue(new KeyValuePair<string, object>("CheckHotspots", points));
         }
 
         private void lstBlackspots_DoubleClick(object sender, EventArgs e)
         {
-            if (lstBlackspots.SelectedIndex >= 0)
-                GoTo(lstBlackspots.Items[lstBlackspots.SelectedIndex].ToString());
+            if (lstBlackSpots.SelectedIndices.Count > 0)
+                GoTo(lstBlackSpots.Items[lstBlackSpots.SelectedIndices[0]].ToString());
         }
 
         private void lstHotSpots_DoubleClick(object sender, EventArgs e)
         {
-            if (lstHotSpots.SelectedIndex >= 0)
-                GoTo(lstHotSpots.Items[lstHotSpots.SelectedIndex].ToString());
+            if (lstHotSpots.SelectedIndices.Count > 0)
+                GoTo(lstHotSpots.Items[lstHotSpots.SelectedIndices[0]].ToString());
         }
 
         private void lstMailboxes_DoubleClick(object sender, EventArgs e)
         {
-            if (lstMailboxes.SelectedIndex >= 0)
-                GoTo(lstMailboxes.Items[lstMailboxes.SelectedIndex].ToString());
+            if (lstMailboxes.SelectedIndices.Count > 0)
+                GoTo(lstMailboxes.Items[lstMailboxes.SelectedIndices[0]].ToString());
         }
 
         private void lstNPC_DoubleClick(object sender, EventArgs e)
         {
-            if (lstNPC.SelectedIndex >= 0)
-                GoTo(lstNPC.Items[lstNPC.SelectedIndex].ToString());
-        }
-
-        private void lstHotSpots_DrawItem(object sender, DrawItemEventArgs e)
-        {
-            ListBox lst = (ListBox)sender;
-            e.DrawBackground();
-            if (e.Index == closesthotspot)
-                e.Graphics.FillRectangle(new SolidBrush(Color.Yellow), e.Bounds);
-            e.Graphics.DrawString(lst.Items[e.Index].ToString(), e.Font, Brushes.Black, e.Bounds, StringFormat.GenericDefault);
-            e.DrawFocusRectangle();
+            if (lstNPC.SelectedIndices.Count > 0)
+                GoTo(lstNPC.Items[lstNPC.SelectedIndices[0]].ToString());
         }
 
         private void statusStrip1_Resize(object sender, EventArgs e)
@@ -637,61 +781,76 @@ namespace HotspotRecorder
             toolStripProgressBar1.Width = statusStrip1.Width - 20;
         }
 
-    }
-}
-
-
-internal class FlickerFreeListBox : System.Windows.Forms.ListBox
-{
-    public FlickerFreeListBox()
-    {
-        this.SetStyle(
-            ControlStyles.OptimizedDoubleBuffer |
-            ControlStyles.ResizeRedraw |
-            ControlStyles.UserPaint,
-            true);
-        this.DrawMode = DrawMode.OwnerDrawFixed;
-    }
-    protected override void OnDrawItem(DrawItemEventArgs e)
-    {
-        if (this.Items.Count > 0)
+        private void lstHotSpots_DrawItem(object sender, DrawItemEventArgs e)
         {
+            ListView lst = (ListView)sender;
             e.DrawBackground();
-            e.Graphics.DrawString(this.Items[e.Index].ToString(), e.Font, new SolidBrush(this.ForeColor), new PointF(e.Bounds.X, e.Bounds.Y));
+            if (e.Index == closesthotspot)
+                e.Graphics.FillRectangle(new SolidBrush(Color.Yellow), e.Bounds);
+            e.Graphics.DrawString(lst.Items[e.Index].ToString(), e.Font, Brushes.Black, e.Bounds, StringFormat.GenericDefault);
+            e.DrawFocusRectangle();
         }
-        base.OnDrawItem(e);
-    }
-    protected override void OnPaint(PaintEventArgs e)
-    {
-        Region iRegion = new Region(e.ClipRectangle);
-        e.Graphics.FillRegion(new SolidBrush(this.BackColor), iRegion);
-        if (this.Items.Count > 0)
+
+        private void btnStop_Click(object sender, EventArgs e)
         {
-            for (int i = 0; i < this.Items.Count; ++i)
-            {
-                System.Drawing.Rectangle irect = this.GetItemRectangle(i);
-                if (e.ClipRectangle.IntersectsWith(irect))
-                {
-                    if ((this.SelectionMode == SelectionMode.One && this.SelectedIndex == i)
-                    || (this.SelectionMode == SelectionMode.MultiSimple && this.SelectedIndices.Contains(i))
-                    || (this.SelectionMode == SelectionMode.MultiExtended && this.SelectedIndices.Contains(i)))
-                    {
-                        OnDrawItem(new DrawItemEventArgs(e.Graphics, this.Font,
-                            irect, i,
-                            DrawItemState.Selected, this.ForeColor,
-                            this.BackColor));
-                    }
-                    else
-                    {
-                        OnDrawItem(new DrawItemEventArgs(e.Graphics, this.Font,
-                            irect, i,
-                            DrawItemState.Default, this.ForeColor,
-                            this.BackColor));
-                    }
-                    iRegion.Complement(irect);
-                }
-            }
+            autorun = false;
         }
-        base.OnPaint(e);
+
     }
 }
+
+
+//internal class FlickerFreeListView : System.Windows.Forms.ListView
+//{
+//    public FlickerFreeListView()
+//    {
+//        this.SetStyle(
+//            ControlStyles.OptimizedDoubleBuffer |
+//            ControlStyles.ResizeRedraw |
+//            ControlStyles.UserPaint,
+//            true);
+//        this.DrawMode = DrawMode.OwnerDrawFixed;
+//    }
+//    protected override void OnDrawItem(DrawItemEventArgs e)
+//    {
+//        if (this.Items.Count > 0)
+//        {
+//            e.DrawBackground();
+//            e.Graphics.DrawString(this.Items[e.Index].ToString(), e.Font, new SolidBrush(this.ForeColor), new PointF(e.Bounds.X, e.Bounds.Y));
+//        }
+//        base.OnDrawItem(e);
+//    }
+//    protected override void OnPaint(PaintEventArgs e)
+//    {
+//        Region iRegion = new Region(e.ClipRectangle);
+//        e.Graphics.FillRegion(new SolidBrush(this.BackColor), iRegion);
+//        if (this.Items.Count > 0)
+//        {
+//            for (int i = 0; i < this.Items.Count; ++i)
+//            {
+//                System.Drawing.Rectangle irect = this.GetItemRectangle(i);
+//                if (e.ClipRectangle.IntersectsWith(irect))
+//                {
+//                    if ((this.SelectionMode == SelectionMode.One && this.SelectedIndex == i)
+//                    || (this.SelectionMode == SelectionMode.MultiSimple && this.SelectedIndices.Contains(i))
+//                    || (this.SelectionMode == SelectionMode.MultiExtended && this.SelectedIndices.Contains(i)))
+//                    {
+//                        OnDrawItem(new DrawItemEventArgs(e.Graphics, this.Font,
+//                            irect, i,
+//                            DrawItemState.Selected, this.ForeColor,
+//                            this.BackColor));
+//                    }
+//                    else
+//                    {
+//                        OnDrawItem(new DrawItemEventArgs(e.Graphics, this.Font,
+//                            irect, i,
+//                            DrawItemState.Default, this.ForeColor,
+//                            this.BackColor));
+//                    }
+//                    iRegion.Complement(irect);
+//                }
+//            }
+//        }
+//        base.OnPaint(e);
+//    }
+//}
