@@ -256,7 +256,8 @@ namespace HotspotRecorder
                         if (lvi.BackColor != Color.White)
                             lvi.BackColor = Color.White;
                     }
-                    lstHotSpots.Items[closestindex].BackColor = Color.Yellow;
+                    if (closestindex >= 0)
+                        lstHotSpots.Items[closestindex].BackColor = Color.Yellow;
                     lstHotSpots.Invalidate();
                 }
             }
@@ -623,8 +624,11 @@ namespace HotspotRecorder
                 return;
             List<string> newlist = new List<string>();
 
-            foreach (Object obj in lb.SelectedItems)
-                newlist.Add(obj.ToString());
+            foreach (ListViewItem lvi in lb.Items)
+            {
+                if (lvi.Selected == false)
+                    newlist.Add(lvi.Text);
+            }
 
             lb.Items.Clear();
             foreach (String s in newlist)
@@ -674,7 +678,7 @@ namespace HotspotRecorder
             if (lb == null) return;
             if (lb.SelectedIndices.Count == 0)
                 return;
-            GoTo(lb.Items[lb.SelectedIndices[0]].ToString());
+            GoTo(lb.Items[lb.SelectedIndices[0]].Text);
         }
 
         private void btnPrev_Click(object sender, EventArgs e)
@@ -691,7 +695,7 @@ namespace HotspotRecorder
             else
                 newindex = index - 1;
             lb.Items[newindex].Selected = true;
-            GoTo(lb.Items[newindex].ToString());
+            GoTo(lb.Items[newindex].Text);
         }
 
         private void btnNext_Click(object sender, EventArgs e)
@@ -708,7 +712,7 @@ namespace HotspotRecorder
             else
                 newindex = index + 1;
             lb.Items[newindex].Selected = true;
-            GoTo(lb.Items[newindex].ToString());
+            GoTo(lb.Items[newindex].Text);
         }
 
         private void btnRunPoints_Click(object sender, EventArgs e)
@@ -743,7 +747,7 @@ namespace HotspotRecorder
             if (lb == null) return;
             points = new List<HotspotRecorderPlugin.XYZ>();
             for (int i = 0; i < lb.Items.Count; i++)
-                points.Add(StringToPoint(lb.Items[i].ToString()));
+                points.Add(StringToPoint(lb.Items[i].Text));
         }
 
         private void btnCheckPoints_Click(object sender, EventArgs e)
@@ -755,25 +759,25 @@ namespace HotspotRecorder
         private void lstBlackspots_DoubleClick(object sender, EventArgs e)
         {
             if (lstBlackSpots.SelectedIndices.Count > 0)
-                GoTo(lstBlackSpots.Items[lstBlackSpots.SelectedIndices[0]].ToString());
+                GoTo(lstBlackSpots.Items[lstBlackSpots.SelectedIndices[0]].Text);
         }
 
         private void lstHotSpots_DoubleClick(object sender, EventArgs e)
         {
             if (lstHotSpots.SelectedIndices.Count > 0)
-                GoTo(lstHotSpots.Items[lstHotSpots.SelectedIndices[0]].ToString());
+                GoTo(lstHotSpots.Items[lstHotSpots.SelectedIndices[0]].Text);
         }
 
         private void lstMailboxes_DoubleClick(object sender, EventArgs e)
         {
             if (lstMailboxes.SelectedIndices.Count > 0)
-                GoTo(lstMailboxes.Items[lstMailboxes.SelectedIndices[0]].ToString());
+                GoTo(lstMailboxes.Items[lstMailboxes.SelectedIndices[0]].Text);
         }
 
         private void lstNPC_DoubleClick(object sender, EventArgs e)
         {
             if (lstNPC.SelectedIndices.Count > 0)
-                GoTo(lstNPC.Items[lstNPC.SelectedIndices[0]].ToString());
+                GoTo(lstNPC.Items[lstNPC.SelectedIndices[0]].Text);
         }
 
         private void statusStrip1_Resize(object sender, EventArgs e)
@@ -787,7 +791,7 @@ namespace HotspotRecorder
             e.DrawBackground();
             if (e.Index == closesthotspot)
                 e.Graphics.FillRectangle(new SolidBrush(Color.Yellow), e.Bounds);
-            e.Graphics.DrawString(lst.Items[e.Index].ToString(), e.Font, Brushes.Black, e.Bounds, StringFormat.GenericDefault);
+            e.Graphics.DrawString(lst.Items[e.Index].Text, e.Font, Brushes.Black, e.Bounds, StringFormat.GenericDefault);
             e.DrawFocusRectangle();
         }
 
@@ -798,59 +802,3 @@ namespace HotspotRecorder
 
     }
 }
-
-
-//internal class FlickerFreeListView : System.Windows.Forms.ListView
-//{
-//    public FlickerFreeListView()
-//    {
-//        this.SetStyle(
-//            ControlStyles.OptimizedDoubleBuffer |
-//            ControlStyles.ResizeRedraw |
-//            ControlStyles.UserPaint,
-//            true);
-//        this.DrawMode = DrawMode.OwnerDrawFixed;
-//    }
-//    protected override void OnDrawItem(DrawItemEventArgs e)
-//    {
-//        if (this.Items.Count > 0)
-//        {
-//            e.DrawBackground();
-//            e.Graphics.DrawString(this.Items[e.Index].ToString(), e.Font, new SolidBrush(this.ForeColor), new PointF(e.Bounds.X, e.Bounds.Y));
-//        }
-//        base.OnDrawItem(e);
-//    }
-//    protected override void OnPaint(PaintEventArgs e)
-//    {
-//        Region iRegion = new Region(e.ClipRectangle);
-//        e.Graphics.FillRegion(new SolidBrush(this.BackColor), iRegion);
-//        if (this.Items.Count > 0)
-//        {
-//            for (int i = 0; i < this.Items.Count; ++i)
-//            {
-//                System.Drawing.Rectangle irect = this.GetItemRectangle(i);
-//                if (e.ClipRectangle.IntersectsWith(irect))
-//                {
-//                    if ((this.SelectionMode == SelectionMode.One && this.SelectedIndex == i)
-//                    || (this.SelectionMode == SelectionMode.MultiSimple && this.SelectedIndices.Contains(i))
-//                    || (this.SelectionMode == SelectionMode.MultiExtended && this.SelectedIndices.Contains(i)))
-//                    {
-//                        OnDrawItem(new DrawItemEventArgs(e.Graphics, this.Font,
-//                            irect, i,
-//                            DrawItemState.Selected, this.ForeColor,
-//                            this.BackColor));
-//                    }
-//                    else
-//                    {
-//                        OnDrawItem(new DrawItemEventArgs(e.Graphics, this.Font,
-//                            irect, i,
-//                            DrawItemState.Default, this.ForeColor,
-//                            this.BackColor));
-//                    }
-//                    iRegion.Complement(irect);
-//                }
-//            }
-//        }
-//        base.OnPaint(e);
-//    }
-//}
