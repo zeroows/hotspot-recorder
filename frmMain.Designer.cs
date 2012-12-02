@@ -43,9 +43,17 @@
             this.lblProfileNameLabel = new System.Windows.Forms.Label();
             this.tabMain = new System.Windows.Forms.TabControl();
             this.tabPage1 = new System.Windows.Forms.TabPage();
+            this.lstHotSpots = new System.Windows.Forms.ListView();
+            this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.tabPage2 = new System.Windows.Forms.TabPage();
+            this.lstBlackSpots = new System.Windows.Forms.ListView();
+            this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.tabPage3 = new System.Windows.Forms.TabPage();
+            this.lstMailboxes = new System.Windows.Forms.ListView();
+            this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.tabPage4 = new System.Windows.Forms.TabPage();
+            this.lstNPC = new System.Windows.Forms.ListView();
+            this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
             this.groupBox2 = new System.Windows.Forms.GroupBox();
             this.label1 = new System.Windows.Forms.Label();
             this.label3 = new System.Windows.Forms.Label();
@@ -69,17 +77,9 @@
             this.btnNext = new System.Windows.Forms.Button();
             this.btnRunPoints = new System.Windows.Forms.Button();
             this.btnMove = new System.Windows.Forms.Button();
+            this.btnStop = new System.Windows.Forms.Button();
             this.label2 = new System.Windows.Forms.Label();
             this.txtAdjustHeight = new System.Windows.Forms.TextBox();
-            this.lstHotSpots = new System.Windows.Forms.ListView();
-            this.columnHeader2 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.lstBlackSpots = new System.Windows.Forms.ListView();
-            this.columnHeader3 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.lstMailboxes = new System.Windows.Forms.ListView();
-            this.columnHeader4 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.lstNPC = new System.Windows.Forms.ListView();
-            this.columnHeader1 = ((System.Windows.Forms.ColumnHeader)(new System.Windows.Forms.ColumnHeader()));
-            this.btnStop = new System.Windows.Forms.Button();
             this.groupBox1.SuspendLayout();
             this.tabMain.SuspendLayout();
             this.tabPage1.SuspendLayout();
@@ -269,6 +269,23 @@
             this.tabPage1.ToolTipText = "The primary hotspots in your profile";
             this.tabPage1.UseVisualStyleBackColor = true;
             // 
+            // lstHotSpots
+            // 
+            this.lstHotSpots.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeader2});
+            this.lstHotSpots.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lstHotSpots.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+            this.lstHotSpots.Location = new System.Drawing.Point(3, 2);
+            this.lstHotSpots.Name = "lstHotSpots";
+            this.lstHotSpots.Size = new System.Drawing.Size(300, 162);
+            this.lstHotSpots.TabIndex = 0;
+            this.lstHotSpots.UseCompatibleStateImageBehavior = false;
+            this.lstHotSpots.View = System.Windows.Forms.View.Details;
+            // 
+            // columnHeader2
+            // 
+            this.columnHeader2.Width = 1031;
+            // 
             // tabPage2
             // 
             this.tabPage2.Controls.Add(this.lstBlackSpots);
@@ -283,6 +300,23 @@
             this.tabPage2.ToolTipText = "Spots that cause problems and need to be avoided";
             this.tabPage2.UseVisualStyleBackColor = true;
             // 
+            // lstBlackSpots
+            // 
+            this.lstBlackSpots.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeader3});
+            this.lstBlackSpots.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lstBlackSpots.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+            this.lstBlackSpots.Location = new System.Drawing.Point(3, 2);
+            this.lstBlackSpots.Name = "lstBlackSpots";
+            this.lstBlackSpots.Size = new System.Drawing.Size(300, 162);
+            this.lstBlackSpots.TabIndex = 1;
+            this.lstBlackSpots.UseCompatibleStateImageBehavior = false;
+            this.lstBlackSpots.View = System.Windows.Forms.View.Details;
+            // 
+            // columnHeader3
+            // 
+            this.columnHeader3.Width = 1031;
+            // 
             // tabPage3
             // 
             this.tabPage3.Controls.Add(this.lstMailboxes);
@@ -296,6 +330,23 @@
             this.tabPage3.ToolTipText = "Mailbox locations";
             this.tabPage3.UseVisualStyleBackColor = true;
             // 
+            // lstMailboxes
+            // 
+            this.lstMailboxes.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeader4});
+            this.lstMailboxes.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lstMailboxes.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+            this.lstMailboxes.Location = new System.Drawing.Point(0, 0);
+            this.lstMailboxes.Name = "lstMailboxes";
+            this.lstMailboxes.Size = new System.Drawing.Size(306, 166);
+            this.lstMailboxes.TabIndex = 1;
+            this.lstMailboxes.UseCompatibleStateImageBehavior = false;
+            this.lstMailboxes.View = System.Windows.Forms.View.Details;
+            // 
+            // columnHeader4
+            // 
+            this.columnHeader4.Width = 1031;
+            // 
             // tabPage4
             // 
             this.tabPage4.Controls.Add(this.lstNPC);
@@ -308,6 +359,23 @@
             this.toolTip1.SetToolTip(this.tabPage4, "Repair/food vendors.");
             this.tabPage4.ToolTipText = "Repair and food vendors";
             this.tabPage4.UseVisualStyleBackColor = true;
+            // 
+            // lstNPC
+            // 
+            this.lstNPC.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
+            this.columnHeader1});
+            this.lstNPC.Dock = System.Windows.Forms.DockStyle.Fill;
+            this.lstNPC.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
+            this.lstNPC.Location = new System.Drawing.Point(0, 0);
+            this.lstNPC.Name = "lstNPC";
+            this.lstNPC.Size = new System.Drawing.Size(306, 166);
+            this.lstNPC.TabIndex = 1;
+            this.lstNPC.UseCompatibleStateImageBehavior = false;
+            this.lstNPC.View = System.Windows.Forms.View.Details;
+            // 
+            // columnHeader1
+            // 
+            this.columnHeader1.Width = 1031;
             // 
             // groupBox2
             // 
@@ -513,7 +581,7 @@
             this.btnPrev.Size = new System.Drawing.Size(40, 29);
             this.btnPrev.TabIndex = 79;
             this.btnPrev.Text = "<--";
-            this.toolTip1.SetToolTip(this.btnPrev, "Go toprev spot");
+            this.toolTip1.SetToolTip(this.btnPrev, "Go to prev spot");
             this.btnPrev.UseVisualStyleBackColor = true;
             this.btnPrev.Click += new System.EventHandler(this.btnPrev_Click);
             // 
@@ -556,6 +624,19 @@
             this.btnMove.UseVisualStyleBackColor = true;
             this.btnMove.Click += new System.EventHandler(this.btnMove_Click);
             // 
+            // btnStop
+            // 
+            this.btnStop.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
+            this.btnStop.Location = new System.Drawing.Point(483, 229);
+            this.btnStop.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
+            this.btnStop.Name = "btnStop";
+            this.btnStop.Size = new System.Drawing.Size(50, 29);
+            this.btnStop.TabIndex = 85;
+            this.btnStop.Text = "Stop";
+            this.toolTip1.SetToolTip(this.btnStop, "Run all the points");
+            this.btnStop.UseVisualStyleBackColor = true;
+            this.btnStop.Click += new System.EventHandler(this.btnStop_Click);
+            // 
             // label2
             // 
             this.label2.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
@@ -574,87 +655,6 @@
             this.txtAdjustHeight.Size = new System.Drawing.Size(65, 22);
             this.txtAdjustHeight.TabIndex = 83;
             this.txtAdjustHeight.Text = "2";
-            // 
-            // lstHotSpots
-            // 
-            this.lstHotSpots.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader2});
-            this.lstHotSpots.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lstHotSpots.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-            this.lstHotSpots.Location = new System.Drawing.Point(3, 2);
-            this.lstHotSpots.Name = "lstHotSpots";
-            this.lstHotSpots.Size = new System.Drawing.Size(300, 162);
-            this.lstHotSpots.TabIndex = 0;
-            this.lstHotSpots.UseCompatibleStateImageBehavior = false;
-            this.lstHotSpots.View = System.Windows.Forms.View.Details;
-            // 
-            // columnHeader2
-            // 
-            this.columnHeader2.Width = 1031;
-            // 
-            // lstBlackSpots
-            // 
-            this.lstBlackSpots.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader3});
-            this.lstBlackSpots.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lstBlackSpots.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-            this.lstBlackSpots.Location = new System.Drawing.Point(3, 2);
-            this.lstBlackSpots.Name = "lstBlackSpots";
-            this.lstBlackSpots.Size = new System.Drawing.Size(300, 162);
-            this.lstBlackSpots.TabIndex = 1;
-            this.lstBlackSpots.UseCompatibleStateImageBehavior = false;
-            this.lstBlackSpots.View = System.Windows.Forms.View.Details;
-            // 
-            // columnHeader3
-            // 
-            this.columnHeader3.Width = 1031;
-            // 
-            // lstMailboxes
-            // 
-            this.lstMailboxes.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader4});
-            this.lstMailboxes.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lstMailboxes.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-            this.lstMailboxes.Location = new System.Drawing.Point(0, 0);
-            this.lstMailboxes.Name = "lstMailboxes";
-            this.lstMailboxes.Size = new System.Drawing.Size(306, 166);
-            this.lstMailboxes.TabIndex = 1;
-            this.lstMailboxes.UseCompatibleStateImageBehavior = false;
-            this.lstMailboxes.View = System.Windows.Forms.View.Details;
-            // 
-            // columnHeader4
-            // 
-            this.columnHeader4.Width = 1031;
-            // 
-            // lstNPC
-            // 
-            this.lstNPC.Columns.AddRange(new System.Windows.Forms.ColumnHeader[] {
-            this.columnHeader1});
-            this.lstNPC.Dock = System.Windows.Forms.DockStyle.Fill;
-            this.lstNPC.HeaderStyle = System.Windows.Forms.ColumnHeaderStyle.None;
-            this.lstNPC.Location = new System.Drawing.Point(0, 0);
-            this.lstNPC.Name = "lstNPC";
-            this.lstNPC.Size = new System.Drawing.Size(306, 166);
-            this.lstNPC.TabIndex = 1;
-            this.lstNPC.UseCompatibleStateImageBehavior = false;
-            this.lstNPC.View = System.Windows.Forms.View.Details;
-            // 
-            // columnHeader1
-            // 
-            this.columnHeader1.Width = 1031;
-            // 
-            // btnStop
-            // 
-            this.btnStop.Anchor = ((System.Windows.Forms.AnchorStyles)((System.Windows.Forms.AnchorStyles.Bottom | System.Windows.Forms.AnchorStyles.Left)));
-            this.btnStop.Location = new System.Drawing.Point(483, 229);
-            this.btnStop.Margin = new System.Windows.Forms.Padding(3, 2, 3, 2);
-            this.btnStop.Name = "btnStop";
-            this.btnStop.Size = new System.Drawing.Size(50, 29);
-            this.btnStop.TabIndex = 85;
-            this.btnStop.Text = "Stop";
-            this.toolTip1.SetToolTip(this.btnStop, "Run all the points");
-            this.btnStop.UseVisualStyleBackColor = true;
-            this.btnStop.Click += new System.EventHandler(this.btnStop_Click);
             // 
             // frmMain
             // 
