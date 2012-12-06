@@ -606,8 +606,10 @@ namespace HotspotRecorder
         {
             ListView lb = theSelectedTab();
             if (lb == null) return;
-            string[] lst = lb.Items.Cast<string>().ToArray();
-            Array.Reverse(lst);
+            List<string> lst = new List<string>();
+            for (int i = 0; i < lb.Items.Count; i++ )
+                lst.Add(lb.Items[i].Text);
+            lst.Reverse();
             lb.Items.Clear();
             foreach (string s in lst)
                 lb.Items.Add(new ListViewItem(s));
