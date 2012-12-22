@@ -33,7 +33,7 @@ namespace HotspotRecorder
         private List<HotspotRecorderPlugin.XYZ> points = null;
         private HotspotRecorderPlugin fakeplugin = null;
         private List<HotspotRecorderPlugin.XYZ> checkedpoints = null;
-        static CultureInfo culture = CultureInfo.CreateSpecificCulture("en-US");
+        static CultureInfo culture = CultureInfo.InvariantCulture;
         private bool autorun = false;
         private string header = @"<?xml version=""1.0"" encoding=""utf-8""?>
 <HBProfile>
